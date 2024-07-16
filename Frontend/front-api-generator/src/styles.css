@@ -1,0 +1,170 @@
+/* Global Styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+}
+
+/* Container for the entire app */
+.app-container {
+    width: 80%;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+
+/* Main header */
+h1 {
+    text-align: center;
+    color: #333;
+}
+
+/* Table Form Styles */
+.table-form {
+    margin: 20px 0;
+}
+
+/* Entity Form Styles */
+.entity-form {
+    border: 1px solid #ddd;
+    padding: 20px;
+    margin-bottom: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+}
+
+/* Column Container Styles */
+.column-container {
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin-bottom: 10px;
+    background-color: #f1f1f1;
+    border-radius: 8px;
+}
+
+/* Column Form Styles */
+.column-form {
+    margin-bottom: 20px;
+}
+
+/* Labels for input fields */
+label {
+    display: block;
+    margin: 10px 0 5px;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Input fields and Select boxes */
+input[type="text"],
+input[type="number"],
+select {
+    width: calc(100% - 20px);
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+/* Checkboxes */
+input[type="checkbox"] {
+    margin-right: 5px;
+}
+
+/* Constraints container */
+.constraints {
+    margin: 10px 0;
+}
+
+.constraint-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.constraint-item label {
+    flex: 1;
+    margin-right: 10px;
+}
+
+/* Foreign Key Group Styles */
+.foreign-key-group {
+    margin-top: 15px;
+}
+
+/* Description input field */
+input[name="description"] {
+    width: calc(100% - 20px);
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+/* Buttons */
+button {
+    display: inline-block;
+    padding: 10px 15px;
+    margin-right: 10px;
+    font-size: 14px;
+    cursor: pointer;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+/* JSON Preview */
+.json-preview {
+    margin-top: 20px;
+}
+
+.json-preview h3 {
+    margin-bottom: 10px;
+}
+
+.json-preview pre {
+    background-color: #f1f1f1;
+    padding: 10px;
+    border-radius: 4px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+/* API Result Styles */
+.api-result {
+    margin-top: 20px;
+}
+
+.api-result h2 {
+    margin-bottom: 10px;
+}
+
+.api-result pre {
+    background-color: #f1f1f1;
+    padding: 10px;
+    border-radius: 4px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+/* Checkbox Group Styles */
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.checkbox-group label {
+    margin-right: 10px;
+}
