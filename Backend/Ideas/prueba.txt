@@ -1,0 +1,172 @@
+{
+    "main.py": "from fastapi import FastAPI, HTTPException, Depends
+from sqlalchemy.orm import Session
+from database import SessionLocal, engine
+import models, schemas, crud
+from typing import List
+
+# Create the FastAPI app
+app = FastAPI()
+
+# Create all tables in the database
+models.Base.metadata.create_all(bind=engine)
+
+# Dependency to get the database session
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+# Create endpoints for personas
+@app.post('/personas/', response_model=schemas.Persona)
+def create_persona(persona: schemas.PersonaCreate, db: Session = Depends(get_db)):
+    return crud.create_persona(db=db, persona=persona)
+
+@app.get('/personas/', response_model=List[schemas.Persona])
+def read_personas(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+    return crud.get_personas(db, skip=skip, limit=limit)
+
+@app.get('/personas/{cedula}', response_model=schemas.Persona)
+def read_persona(cedula: str, db: Session = Depends(get_db)):
+    persona = crud.get_persona(db, cedula=cedula)
+    if persona is None:
+        raise HTTPException(status_code=404, detail='Persona not found')
+    return persona
+
+@app.delete('/personas/{cedula}', response_model=schemas.Persona)
+def delete_persona(cedula: str, db: Session = Depends(get_db)):
+    persona = crud.delete_persona(db, cedula=cedula)
+    if persona is None:
+        raise HTTPException(status_code=404, detail='Persona not found')
+    return persona
+
+# Create endpoints for objetos
+@app.post('/objetos/', response_model=schemas.Objeto)
+def create_objeto(objeto: schemas.ObjetoCreate, db: Session = Depends(get_db)):
+    return crud.create_objeto(db=db, objeto=objeto)
+
+@app.get('/objetos/', response_model=List[schemas.Objeto])
+def read_objetos(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+    return crud.get_objetos(db, skip=skip, limit=limit)
+
+@app.get('/objetos/{nombre_objeto}', response_model=schemas.Objeto)
+def read_objeto(nombre_objeto: str, db: Session = Depends(get_db)):
+    objeto = crud.get_objeto(db, nombre_objeto=nombre_objeto)
+    if objeto is None:
+        raise HTTPException(status_code=404, detail='Objeto not found')
+    return objeto
+
+@app.delete('/objetos/{nombre_objeto}', response_model=schemas.Objeto)
+def delete_objeto(nombre_objeto: str, db: Session = Depends(get_db)):
+    objeto = crud.delete_objeto(db, nombre_objeto=nombre_objeto)
+    if objeto is None:
+        raise HTTPException(status_code=404, detail='Objeto not found')
+    return objeto
+",
+    "models.py": "from sqlalchemy import Column, String, BigInteger, ForeignKey
+from sqlalchemy.ext.declarative import declarative_base
+
+Base = declarative_base()
+
+class Persona(Base):
+    __tablename__ = 'personas'
+    cedula = Column(String(255), primary_key=True)
+    nombre = Column(String(255), nullable=False)
+    edad = Column(BigInteger, nullable=False)
+
+class Objeto(Base):
+    __tablename__ = 'objetos'
+    nombre_objeto = Column(String(255), primary_key=True)
+    cedula_propietario = Column(String(255), ForeignKey('personas.cedula'))
+    nombre_propietario = Column(String(255), ForeignKey('personas.nombre'))
+",
+    "schemas.py": "from pydantic import BaseModel
+
+class PersonaBase(BaseModel):
+    cedula: str
+    nombre: str
+    edad: int
+
+class PersonaCreate(PersonaBase):
+    pass
+
+class Persona(PersonaBase):
+    class Config:
+        orm_mode = True
+
+class ObjetoBase(BaseModel):
+    nombre_objeto: str
+    cedula_propietario: str
+    nombre_propietario: str
+
+class ObjetoCreate(ObjetoBase):
+    pass
+
+class Objeto(ObjetoBase):
+    class Config:
+        orm_mode = True
+",
+    "crud.py": "from sqlalchemy.orm import Session
+from models import Persona, Objeto
+from schemas import PersonaCreate, ObjetoCreate
+
+# CRUD operations for Persona
+
+def get_persona(db: Session, cedula: str):
+    return db.query(Persona).filter(Persona.cedula == cedula).first()
+
+def get_personas(db: Session, skip: int = 0, limit: int = 10):
+    return db.query(Persona).offset(skip).limit(limit).all()
+
+def create_persona(db: Session, persona: PersonaCreate):
+    db_persona = Persona(cedula=persona.cedula, nombre=persona.nombre, edad=persona.edad)
+    db.add(db_persona)
+    db.commit()
+    db.refresh(db_persona)
+    return db_persona
+
+def delete_persona(db: Session, cedula: str):
+    persona = get_persona(db, cedula)
+    if persona is None:
+        return None
+    db.delete(persona)
+    db.commit()
+    return persona
+
+# CRUD operations for Objeto
+
+def get_objeto(db: Session, nombre_objeto: str):
+    return db.query(Objeto).filter(Objeto.nombre_objeto == nombre_objeto).first()
+
+def get_objetos(db: Session, skip: int = 0, limit: int = 10):
+    return db.query(Objeto).offset(skip).limit(limit).all()
+
+def create_objeto(db: Session, objeto: ObjetoCreate):
+    db_objeto = Objeto(nombre_objeto=objeto.nombre_objeto, cedula_propietario=objeto.cedula_propietario, nombre_propietario=objeto.nombre_propietario)
+    db.add(db_objeto)
+    db.commit()
+    db.refresh(db_objeto)
+    return db_objeto
+
+def delete_objeto(db: Session, nombre_objeto: str):
+    objeto = get_objeto(db, nombre_objeto)
+    if objeto is None:
+        return None
+    db.delete(objeto)
+    db.commit()
+    return objeto
+",
+    "database.py": "from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+
+SQLALCHEMY_DATABASE_URL = 'sqlite:///./test.db'
+
+engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={'check_same_thread': False})
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+Base = declarative_base()
+"
+}
