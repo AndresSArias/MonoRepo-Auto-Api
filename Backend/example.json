@@ -1,0 +1,83 @@
+{
+    "personas": {
+        "columns": {
+            "cedula": {
+                "data_type": "varchar(255)",
+                "constraints": ["LENGTH(cedula) >= 10"],
+                "description": null
+            },
+            "nombre": {
+                "data_type": "varchar(255)",
+                "constraints": ["LENGTH(cedula) >= 10"],
+                "description": "Nombre del usuario"
+            },
+            "edad": {
+                "data_type": "bigint",
+                "constraints": ["edad >= 18 AND edad <= 65"],
+                "description": null
+            }
+        },
+        "primary_key": ["cedula"],
+        "foreign_keys": []
+    },
+    "objetos": {
+        "columns": {
+            "nombre_objeto": {
+                "data_type": "varchar(255)",
+                "constraints": [],
+                "description": null
+            },
+            "cedula_propietario": {
+                "data_type": "varchar(255)",
+                "constraints": ["LENGTH(cedula) >= 10"],
+                "description": null
+            },
+            "nombre_propietario": {
+                "data_type": "varchar(255)",
+                "constraints": ["LENGTH(cedula) >= 10"],
+                "description": "Nombre del usuario"
+            }
+        },
+        "primary_key": ["nombre_objeto"],
+        "foreign_keys": [
+            {
+                "column": ["cedula_propietario", "nombre_propietario"],
+                "references": {
+                    "table": "personas",
+                    "column": ["cedula", "nombre"]
+                }
+            }
+        ]
+    },
+    "nombre_tabla_n": {
+        "columns": {
+            "nombre_columna_1": {
+                "data_type": "varchar(255)",
+                "constraints": ["LENGTH(cedula) >= 10"],
+                "description": "desciption"
+            },
+            "nombre_columna_n": {
+                "data_type": "tipo",
+                "constraints": ["constraint_1","constraint_n"],
+                "description": null
+            }
+        },
+        "primary_key": ["nombre_columna_1","nombre_columna_x_de_'nombre_tabla_n'"],
+        "foreign_keys": [
+            {
+                "column": ["nombre_columna_n", "nombre_columna_x_de_'nombre_tabla_n'"],
+                "references": {
+                    "table": "nombre_tabla_1",
+                    "column": ["nombre_columna_x_de_'nombre_tabla_1'", "nombre_columna_x_de_'nombre_tabla_1'"]
+                }
+            },
+            {
+                "column": ["cedula_propietario", "nombre_propietario"],
+                "references": {
+                    "table": "personas",
+                    "column": ["cedula", "nombre"]
+                }
+            }
+        ]
+    }
+}
