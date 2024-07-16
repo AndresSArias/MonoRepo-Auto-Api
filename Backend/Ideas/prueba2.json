@@ -3,7 +3,7 @@
         
         "cedula": {
             "data_type": "varchar(255)",
-            "constraints": ["LENGTH(cedula) >= 10"],
+            "constraints": null,
             "description": null
         },
         "nombre":{
@@ -18,6 +18,7 @@
         },
         "primary_key": ["cedula"],
         "foreign_keys": []
+        
     },
     "objetos":{
         "nombre_objeto":{
@@ -43,7 +44,7 @@
                     "table": "personas",
                     "column": ["cedula", "nombre"]
                 }
-            }
+            },{}
         ]
     },
     "nombre_tabla_n":{

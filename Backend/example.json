@@ -48,36 +48,5 @@
                 }
             }
         ]
-    },
-    "nombre_tabla_n": {
-        "columns": {
-            "nombre_columna_1": {
-                "data_type": "varchar(255)",
-                "constraints": ["LENGTH(cedula) >= 10"],
-                "description": "desciption"
-            },
-            "nombre_columna_n": {
-                "data_type": "tipo",
-                "constraints": ["constraint_1","constraint_n"],
-                "description": null
-            }
-        },
-        "primary_key": ["nombre_columna_1","nombre_columna_x_de_'nombre_tabla_n'"],
-        "foreign_keys": [
-            {
-                "column": ["nombre_columna_n", "nombre_columna_x_de_'nombre_tabla_n'"],
-                "references": {
-                    "table": "nombre_tabla_1",
-                    "column": ["nombre_columna_x_de_'nombre_tabla_1'", "nombre_columna_x_de_'nombre_tabla_1'"]
-                }
-            },
-            {
-                "column": ["cedula_propietario", "nombre_propietario"],
-                "references": {
-                    "table": "personas",
-                    "column": ["cedula", "nombre"]
-                }
-            }
-        ]
     }
 }
