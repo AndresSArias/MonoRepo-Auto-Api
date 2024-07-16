@@ -1,8 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import './../styles.css';
 
 const dataTypes = [
-    { label: 'String(n)', value: 'String' },
     { label: 'bigint', value: 'BigInteger' },
     { label: 'int', value: 'Integer' },
     { label: 'text', value: 'Text' },
@@ -10,49 +9,72 @@ const dataTypes = [
     { label: 'date', value: 'Date' },
     { label: 'datetime', value: 'DateTime' },
     { label: 'float', value: 'Float' },
-    { label: 'numeric', value: 'Numeric' }
+    { label: 'numeric', value: 'Numeric' },
+    { label: 'String(n)', value: 'String' }
 ];
 
-const constraintsOptions = [
-    { label: 'LENGTH(n)', value: 'LENGTH', requiresInput: true },
-    { label: 'MAXLENGTH(n)', value: 'MAXLENGTH', requiresInput: true },
-    { label: '>= n', value: 'GE', requiresInput: true },
-    { label: '<= n', value: 'LE', requiresInput: true },
-    { label: 'BETWEEN n AND m', value: 'BETWEEN', requiresInput: true },
-    { label: 'IN (val1, val2, ...)', value: 'IN', requiresInput: true },
-    { label: 'NOT NULL', value: 'NOT NULL', requiresInput: false }
+const constraints = [
+    { label: 'LENGTH(n): Restricción de longitud mínima', value: 'LENGTH', hasValue: true, valueType: 'number' },
+    { label: 'MAXLENGTH(n): Restricción de longitud máxima', value: 'MAXLENGTH', hasValue: true, valueType: 'number' },
+    { label: '>= n: Restricción de valor mínimo', value: '>=', hasValue: true, valueType: 'number' },
+    { label: '<= n: Restricción de valor máximo', value: '<=', hasValue: true, valueType: 'number' },
+    { label: 'BETWEEN n AND m: Restricción de rango', value: 'BETWEEN', hasValue: true, valueType: 'range' },
+    { label: 'IN (val1, val2, ...): Restricción de valores permitidos', value: 'IN', hasValue: true, valueType: 'text' },
+    { label: 'NOT NULL: Restricción de no nulo', value: 'NOT NULL', hasValue: false }
 ];
 
-const ColumnForm = ({ index, column, handleColumnChange, entityIndex, tables, disabled }) => {
-    const handleCheckboxChange = (e, constraint) => {
-        const { name, checked } = e.target;
-        let constraints = column.constraints ? column.constraints.split(',') : [];
+const ColumnForm = ({ index, column, handleColumnChange, entityIndex, tables }) => {
+    useEffect(() => {
+        let newConstraints = column.constraints ? [...column.constraints] : [];
+
+        if (column.isPrimaryKey && !newConstraints.some(c => c.type === 'NOT NULL')) {
+            newConstraints.push({ type: 'NOT NULL' });
+        }
+        if (column.isForeignKey && !newConstraints.some(c => c.type === 'NOT NULL')) {
+            newConstraints.push({ type: 'NOT NULL' });
+        }
+
+        // Solo actualizar las restricciones si han cambiado
+        const constraintsChanged = JSON.stringify(newConstraints) !== JSON.stringify(column.constraints);
+        if (constraintsChanged) {
+            handleColumnChange({ target: { name: 'constraints', value: newConstraints } }, entityIndex, index);
+        }
+    }, [column.isPrimaryKey, column.isForeignKey, column.constraints, entityIndex, index, handleColumnChange]);
+
+    const handleConstraintChange = (e, constraint, entityIndex, columnIndex) => {
+        const { checked } = e.target;
+        const newConstraints = column.constraints ? [...column.constraints] : [];
         if (checked) {
-            constraints.push(constraint.value);
+            if (constraint.hasValue) {
+                if (constraint.valueType === 'range') {
+                    newConstraints.push({ type: constraint.value, min: '', max: '' });
+                } else {
+                    newConstraints.push({ type: constraint.value, value: '' });
+                }
+            } else {
+                newConstraints.push({ type: constraint.value });
+            }
         } else {
-            constraints = constraints.filter(c => !c.startsWith(constraint.value));
+            const index = newConstraints.findIndex(c => c.type === constraint.value);
+            if (index > -1) {
+                newConstraints.splice(index, 1);
+            }
         }
-        handleColumnChange({ target: { name, value: constraints.join(',') } }, entityIndex, index);
+        handleColumnChange({ target: { name: 'constraints', value: newConstraints } }, entityIndex, columnIndex);
     };
 
-    const handleInputChange = (e, constraint) => {
-        const { value } = e.target;
-        let constraints = column.constraints ? column.constraints.split(',') : [];
-        const existingConstraintIndex = constraints.findIndex(c => c.startsWith(constraint.value));
-        if (existingConstraintIndex !== -1) {
-            constraints[existingConstraintIndex] = `${constraint.value}(${value})`;
-        } else {
-            constraints.push(`${constraint.value}(${value})`);
+    const handleConstraintValueChange = (e, constraint, entityIndex, columnIndex) => {
+        const { name, value } = e.target;
+        const newConstraints = [...column.constraints];
+        const index = newConstraints.findIndex(c => c.type === constraint.value);
+        if (index > -1) {
+            if (constraint.valueType === 'range') {
+                newConstraints[index][name] = value;
+            } else {
+                newConstraints[index].value = value;
+            }
         }
-        handleColumnChange({ target: { name: 'constraints', value: constraints.join(',') } }, entityIndex, index);
-    };
-
-    const handleDataTypeChange = (e) => {
-        const { value } = e.target;
-        handleColumnChange({ target: { name: 'data_type', value } }, entityIndex, index);
-        if (value === 'String') {
-            handleColumnChange({ target: { name: 'constraints', value: 'LENGTH(255)' } }, entityIndex, index); // Default length
-        }
+        handleColumnChange({ target: { name: 'constraints', value: newConstraints } }, entityIndex, columnIndex);
     };
 
     return (
@@ -64,66 +86,65 @@ const ColumnForm = ({ index, column, handleColumnChange, entityIndex, tables, di
                 name="name"
                 value={column.name}
                 onChange={(e) => handleColumnChange(e, entityIndex, index)}
-                disabled={disabled}
             />
             <label>Data Type:</label>
             <select
                 name="data_type"
                 value={column.data_type}
-                onChange={handleDataTypeChange}
-                disabled={disabled}
+                onChange={(e) => handleColumnChange(e, entityIndex, index)}
             >
                 {dataTypes.map((type, idx) => (
                     <option key={idx} value={type.value}>{type.label}</option>
                 ))}
             </select>
             <label>Constraints:</label>
-            {constraintsOptions.map((constraint, idx) => (
-                <div key={idx}>
-                    <input
-                        type="checkbox"
-                        name="constraints"
-                        checked={column.constraints?.includes(constraint.value) || false}
-                        onChange={(e) => handleCheckboxChange(e, constraint)}
-                        disabled={disabled}
-                    />
-                    <label>{constraint.label}</label>
-                    {constraint.requiresInput && column.constraints?.includes(constraint.value) && (
-                        <input
-                            type="text"
-                            onChange={(e) => handleInputChange(e, constraint)}
-                            placeholder={`Enter value for ${constraint.label}`}
-                            disabled={disabled}
-                        />
-                    )}
-                </div>
-            ))}
+            <div className="constraints">
+                {constraints.map((constraint, idx) => (
+                    <div key={idx} className="constraint-item">
+                        <label>
+                            <input
+                                type="checkbox"
+                                checked={column.constraints && column.constraints.some(c => c.type === constraint.value)}
+                                onChange={(e) => handleConstraintChange(e, constraint, entityIndex, index)}
+                            />
+                            {constraint.label}
+                        </label>
+                        {column.constraints && column.constraints.some(c => c.type === constraint.value) && constraint.hasValue && (
+                            constraint.valueType === 'range' ? (
+                                <>
+                                    <input
+                                        type="number"
+                                        name="min"
+                                        placeholder="min"
+                                        value={column.constraints.find(c => c.type === constraint.value).min}
+                                        onChange={(e) => handleConstraintValueChange(e, constraint, entityIndex, index)}
+                                    />
+                                    <input
+                                        type="number"
+                                        name="max"
+                                        placeholder="max"
+                                        value={column.constraints.find(c => c.type === constraint.value).max}
+                                        onChange={(e) => handleConstraintValueChange(e, constraint, entityIndex, index)}
+                                    />
+                                </>
+                            ) : (
+                                <input
+                                    type={constraint.valueType}
+                                    value={column.constraints.find(c => c.type === constraint.value).value}
+                                    onChange={(e) => handleConstraintValueChange(e, constraint, entityIndex, index)}
+                                />
+                            )
+                        )}
+                    </div>
+                ))}
+            </div>
             <label>Description:</label>
             <input
                 type="text"
                 name="description"
                 value={column.description}
                 onChange={(e) => handleColumnChange(e, entityIndex, index)}
-                disabled={disabled}
             />
-            <div className="checkbox-group">
-                <label>Primary Key:</label>
-                <input
-                    type="checkbox"
-                    name="isPrimaryKey"
-                    checked={column.isPrimaryKey}
-                    onChange={(e) => handleColumnChange(e, entityIndex, index)}
-                    disabled={disabled}
-                />
-                <label>Foreign Key:</label>
-                <input
-                    type="checkbox"
-                    name="isForeignKey"
-                    checked={column.isForeignKey}
-                    onChange={(e) => handleColumnChange(e, entityIndex, index)}
-                    disabled={disabled}
-                />
-            </div>
             {column.isForeignKey && (
                 <div className="foreign-key-group">
                     <label>References Table:</label>
@@ -131,21 +152,23 @@ const ColumnForm = ({ index, column, handleColumnChange, entityIndex, tables, di
                         name="referencesTable"
                         value={column.referencesTable}
                         onChange={(e) => handleColumnChange(e, entityIndex, index)}
-                        disabled={disabled}
                     >
                         <option value="">Select Table</option>
                         {tables.map((table, idx) => (
-                            <option key={idx} value={table}>{table}</option>
+                            <option key={idx} value={table.tableName}>{table.tableName}</option>
                         ))}
                     </select>
                     <label>References Column:</label>
-                    <input
-                        type="text"
+                    <select
                         name="referencesColumn"
                         value={column.referencesColumn}
                         onChange={(e) => handleColumnChange(e, entityIndex, index)}
-                        disabled={disabled}
-                    />
+                    >
+                        <option value="">Select Column</option>
+                        {tables.find(t => t.tableName === column.referencesTable)?.columns.map((col, idx) => (
+                            <option key={idx} value={col.name}>{col.name}</option>
+                        ))}
+                    </select>
                 </div>
             )}
         </div>

@@ -3,14 +3,8 @@ import EntityForm from './EntityForm';
 import './../styles.css';
 
 const TableForm = ({ handleSubmit }) => {
-    const [entities, setEntities] = useState([{
-        tableName: '',
-        columns: [{ name: '', data_type: '', constraints: '', description: '', isPrimaryKey: false, isForeignKey: false, referencesTable: '', referencesColumn: '' }],
-        isLocked: false
-    }]);
+    const [entities, setEntities] = useState([]);
     const [generatedJson, setGeneratedJson] = useState(null);
-    const [isEditingColumn, setIsEditingColumn] = useState({});
-    const [isEditingTable, setIsEditingTable] = useState({});
 
     const handleTableNameChange = (e, entityIndex) => {
         const newEntities = [...entities];
@@ -23,11 +17,6 @@ const TableForm = ({ handleSubmit }) => {
         const newEntities = [...entities];
         if (type === "checkbox") {
             newEntities[entityIndex].columns[columnIndex][name] = checked;
-            if (name === "isPrimaryKey" && checked) {
-                newEntities[entityIndex].columns[columnIndex].constraints = "NOT NULL";
-            } else if (name === "isForeignKey" && checked) {
-                newEntities[entityIndex].columns[columnIndex].constraints = "FOREIGN KEY";
-            }
         } else {
             newEntities[entityIndex].columns[columnIndex][name] = value;
         }
@@ -36,92 +25,38 @@ const TableForm = ({ handleSubmit }) => {
 
     const addColumn = (entityIndex) => {
         const newEntities = [...entities];
-        newEntities[entityIndex].columns.push({ name: '', data_type: '', constraints: '', description: '', isPrimaryKey: false, isForeignKey: false, referencesTable: '', referencesColumn: '' });
-        setEntities(newEntities);
-    };
-
-    const deleteColumn = (entityIndex, columnIndex) => {
-        const newEntities = [...entities];
-        newEntities[entityIndex].columns.splice(columnIndex, 1);
-        setEntities(newEntities);
-    };
-
-    const saveColumn = (entityIndex, columnIndex) => {
-        setIsEditingColumn(prev => ({
-            ...prev,
-            [entityIndex]: {
-                ...prev[entityIndex],
-                [columnIndex]: false
-            }
-        }));
-    };
-
-    const saveEntity = (entityIndex) => {
-        const newEntities = [...entities];
-        newEntities[entityIndex].isLocked = true;
-        setEntities(newEntities);
-    };
-
-    const addEntity = () => {
-        const newEntities = [...entities];
-        newEntities.push({
-            tableName: '',
-            columns: [{ name: '', data_type: '', constraints: '', description: '', isPrimaryKey: false, isForeignKey: false, referencesTable: '', referencesColumn: '' }],
-            isLocked: false
+        newEntities[entityIndex].columns.push({
+            name: '',
+            data_type: '',
+            constraints: [],
+            description: '',
+            isPrimaryKey: false,
+            isForeignKey: false,
+            referencesTable: '',
+            referencesColumn: ''
         });
         setEntities(newEntities);
     };
 
-    const deleteEntity = (entityIndex) => {
-        const newEntities = [...entities];
-        newEntities.splice(entityIndex, 1);
+    const addNewEntity = () => {
+        const newEntities = [...entities, { tableName: '', columns: [] }];
         setEntities(newEntities);
-    };
-
-    const setEditingColumn = (entityIndex, columnIndex, isEditing) => {
-        setIsEditingColumn(prev => ({
-            ...prev,
-            [entityIndex]: {
-                ...prev[entityIndex],
-                [columnIndex]: isEditing
-            }
-        }));
-    };
-
-    const setEditingTable = (entityIndex, isEditing) => {
-        setIsEditingTable(prev => ({
-            ...prev,
-            [entityIndex]: isEditing
-        }));
-    };
-
-    const saveTable = (entityIndex) => {
-        setIsEditingTable(prev => ({
-            ...prev,
-            [entityIndex]: false
-        }));
-        lockEntity(entityIndex);
-    };
-
-    const lockEntity = (index) => {
-        const newEntities = [...entities];
-        newEntities[index].isLocked = true;
-        setEntities(newEntities);
-    };
-
-    const unlockEntity = (index) => {
-        const newEntities = [...entities];
-        newEntities[index].isLocked = false;
-        setEntities(newEntities);
+        console.log('New Entity Added:', newEntities);
     };
 
     const formatColumns = (columns) => {
         const formattedColumns = {};
         columns.forEach((col) => {
-            const dataType = col.data_type === 'String' ? `${col.data_type}(255)` : col.data_type;
+            const dataType = col.data_type;
+            const constraints = col.constraints.map(constraint => {
+                if (constraint.type === 'BETWEEN') {
+                    return `${constraint.type} ${constraint.min} AND ${constraint.max}`;
+                }
+                return `${constraint.type} ${constraint.value || ''}`.trim();
+            });
             formattedColumns[col.name] = {
                 data_type: dataType,
-                constraints: col.constraints ? col.constraints.split(',') : [],
+                constraints: constraints,
                 description: col.description
             };
         });
@@ -166,21 +101,10 @@ const TableForm = ({ handleSubmit }) => {
                     handleTableNameChange={handleTableNameChange}
                     handleColumnChange={handleColumnChange}
                     addColumn={addColumn}
-                    deleteColumn={deleteColumn}
-                    saveColumn={saveColumn}
-                    saveEntity={saveEntity}
-                    lockEntity={lockEntity}
-                    unlockEntity={unlockEntity}
-                    isEditingColumn={isEditingColumn}
-                    setEditingColumn={setEditingColumn}
-                    saveTable={saveTable}
-                    setEditingTable={setEditingTable}
-                    deleteEntity={deleteEntity}
-                    isEditingTable={isEditingTable[entityIndex]}
-                    tables={entities.map(e => e.tableName)}
+                    tables={entities}
                 />
             ))}
-            <button type="button" onClick={addEntity}>Add New Table</button>
+            <button type="button" onClick={addNewEntity}>Add New Entity</button>
             <button type="submit">Generate API</button>
             {generatedJson && (
                 <div className="json-preview">
