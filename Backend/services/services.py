@@ -42,8 +42,9 @@ def process_schema(schema: str):
         ],
     )
     
-
-    return process_schema_response (completion.choices[0].message.content)
+    retorno = process_schema_response (completion.choices[0].message.content)
+    print(retorno)
+    return retorno
 
 
      
