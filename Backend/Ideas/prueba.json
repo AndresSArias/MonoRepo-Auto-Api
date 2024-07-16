@@ -1,0 +1,70 @@
+{
+  "database": {
+    "name": "NombreDeLaBaseDeDatos",
+    "tables": [
+      {
+        "table_name": "NombreDeTabla1",
+        "columns": [
+          {
+            "column_name": "id",
+            "data_type": "bigint",
+            "constraints": ["PRIMARY KEY", "NOT NULL"],
+            "description": "Id de la tabla"
+          },
+          {
+            "column_name": "nombre",
+            "data_type": "varchar(255)",
+            "constraints": ["NOT NULL"],
+            "description": "Nombre del usuario"
+          },
+          {
+            "column_name": "correo",
+            "data_type": "varchar(255)",
+            "constraints": ["UNIQUE", "NOT NULL"],
+            "description": "Correo del usuario"
+          }
+        ],
+        "primary_key": ["id"],
+        "unique_keys": ["correo"],
+        "foreign_keys": [
+          {
+            "column_name": "otro_id",
+            "references": {
+              "table": "OtraTabla",
+              "column": "id"
+            }
+          }
+        ]
+      },
+      {
+        "table_name": "OtraTabla",
+        "columns": [
+          {
+            "column_name": "id",
+            "data_type": "bigint",
+            "constraints": ["PRIMARY KEY", "NOT NULL"],
+            "description": "Id de la otra tabla"
+          },
+          {
+            "column_name": "descripcion",
+            "data_type": "text",
+            "constraints": [],
+            "description": "Descripción de la otra tabla"
+          }
+        ],
+        "primary_key": ["id"],
+        "unique_keys": [],
+        "foreign_keys": []
+      }
+    ],
+    "relationships": [
+      {
+        "type": "one_to_many",
+        "from_table": "NombreDeTabla1",
+        "from_column": "otro_id",
+        "to_table": "OtraTabla",
+        "to_column": "id"
+      }
+    ]
+  }
+}
