@@ -7,7 +7,7 @@ import json
 # Cargar las variables de entorno desde el archivo .env
 load_dotenv()
 
-def process_schema_response(string_with_json):
+def process_schema_response(string_with_json, schema):
     # Usar una expresión regular para extraer el contenido JSON
     match = re.search(r'\{.*\}', string_with_json, re.DOTALL)
     if match:
@@ -24,13 +24,16 @@ def process_schema_response(string_with_json):
             json_data = json.loads(json_str)
             return json_data  # Devolver el diccionario JSON directamente
         except json.JSONDecodeError as e:
-            print(f"Error al decodificar JSON: {e}")
-            return {"error": "JSONDecodeError", "message": str(e)}
+            print(f"Error al decodificar JSON: {e}, tipo {str(e)}.\n Volviendolo a intentar...")
+            return process_schema(schema)    
+
     else:
-        print("No se encontró un JSON válido en la cadena proporcionada.")
-        return {"error": "No se encontró un JSON válido en la cadena proporcionada."}
+        print("No se encontró un JSON válido en la cadena proporcionada.\n Volviendolo a intentar...\n")
+        return process_schema(schema)
+
     
 def process_schema(schema: str):
+    
     # Crear el cliente de OpenAI
     client = OpenAI()
 
@@ -42,9 +45,6 @@ def process_schema(schema: str):
         ],
     )
     
-    retorno = process_schema_response (completion.choices[0].message.content)
-    print(retorno)
-    return retorno
-
+    return process_schema_response (completion.choices[0].message.content, schema)
 
      

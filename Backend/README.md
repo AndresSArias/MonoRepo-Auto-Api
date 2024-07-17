@@ -3,6 +3,7 @@ Hi, to deploy the backend of AUTO_API, follow these steps:
 1. python -m venv venv
 2. venv\Scripts\activate
 3. pip install -r requirements.txt
+4. create ".env" with ".env.template"
 4. uvicorn main:app --reload
 
 To use the endpoint:
