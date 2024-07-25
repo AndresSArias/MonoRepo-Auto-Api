@@ -1,0 +1,82 @@
+{
+    'main.py': 
+                "
+                from fastapi import FastAPI, HTTPException, Depends
+                from sqlalchemy.orm import Session
+                from pydantic import BaseModel, constr, conint
+                from database import Base, engine, get_db
+                from sqlalchemy import Column, String, Integer, ForeignKey, and_
+                from sqlalchemy.orm import relationship
+
+                app 
+                = FastAPI()
+
+                Base.metadata.create_all(bind=engine)
+
+                class Persona(Base):
+                    __tablename__ = 'personas'
+                    cedula = Column(String(255), primary_key=True, index=True)
+                    nombre = Column(String(255), index=True)
+                    edad = Column(Integer)
+                    objetos = relationship('Objeto', back_populates='propietario')
+
+                class Objeto(Base):
+                    __tablename__ 
+                = 'objetos'
+                    nombre_objeto = Column(String(255), primary_key=True, index=True)
+                    cedula_propietario = Column(String(255), ForeignKey('personas.cedula'))
+                    nombre_propietario = Column(String(255))
+                    propietario = relationship('Persona', back_populates='objetos')
+
+                class PersonaCreate(BaseModel):
+                    cedula: constr(min_length=10)
+                    nombre: constr(min_length=10)
+                    edad: conint(ge=18, le=65)
+
+                class ObjetoCreate(BaseModel):
+                    nombre_objeto: str
+                    cedula_propietario: constr(min_length=10)
+                    nombre_propietario: constr(min_length=10)
+
+                @app.post('/personas/', response_model=PersonaCreate)
+                async def create_persona(persona: PersonaCreate, db: Session = Depends(get_db)):
+                    db_persona = Persona(**persona.dict())
+                    db.add(db_persona)
+                    db.commit()
+                    db.refresh(db_persona)
+                    return db_persona
+
+                @app.post('/objetos/', response_model=ObjetoCreate)
+                async def create_objeto(objeto: ObjetoCreate, db: Session = Depends(get_db)):
+                    db_persona = db.query(Persona).filter(and_(Persona.cedula == objeto.cedula_propietario, Persona.nombre == objeto.nombre_propietario)).first()
+                
+                if not db_persona:
+                        raise HTTPException(status_code=404, detail='Propietario not found')
+                
+                db_objeto = Objeto(**objeto.dict())
+                    db.add(db_objeto)
+                    db.commit()
+                    db.refresh(db_objeto)
+                    return db_objeto
+                ", 
+    'database.py': "from sqlalchemy import create_engine
+                from sqlalchemy.ext.declarative import declarative_base
+                from sqlalchemy.orm import sessionmaker
+
+                SQLALCHEMY_DATABASE_URL = 'sqlite:///./test.db'
+
+                engine = create_engine(
+                    SQLALCHEMY_DATABASE_URL, connect_args={'check_same_thread': False}
+                )
+                SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+                Base = declarative_base()
+
+                def get_db():
+                    db = SessionLocal()
+                    try:
+                        yield db
+                    finally:
+                
+                    db.close()
+                "
+}
